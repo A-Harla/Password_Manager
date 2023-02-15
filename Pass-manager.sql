@@ -11,7 +11,7 @@ pass varchar(30) not null); -- Пароль пользователя в Мене
 -- Таблица с указанием роли пользователя (user - обычный пользователь, super - Пользователь с расширенными правами) --
 -- Для определения роли пользователя используется перечислямый тип enum --
 create type user_type AS ENUM ('user', 'super');
--- --
+
 create table main.uTypes(
 id int not null primary key references main.Users on delete cascade, -- связь 1 к 1 с таблицей Users
 u_type user_type default 'user');
@@ -34,9 +34,10 @@ PID int primary key references main.PassID,-- какой пароль --
 add_date time default current_time, -- когда был добавлен --
 last_use time default current_time); -- когда использовался последний раз --
 
-
 --     Создание функций и процедур для работы с таблицами БД     --
+
 --  Процедуры добавления данных  --
+
 -- Добавление нового Пользователя --
 create or replace procedure Add_new_user(ul varchar(30), up varchar(30)) -- ul - user login; up - user password; --
 language sql 
@@ -44,7 +45,6 @@ as $$
 insert into main.Users (login, pass)
 values(ul, up);
 $$
-
 -- Вызов для проверки работоспособности -- 
 call Add_new_user('Ivan', 'ivan1234');
 
@@ -55,7 +55,6 @@ as $$
 insert into main.PassID (UserId, Resource)
 values (uID, res);
 $$
-
 -- Вызов для проверки работоспособности -- 
 call add_new_password(1, 'Site_1');
 
@@ -66,7 +65,6 @@ as $$
 insert into main.Passwords (PID, login, pass)
 values (pid, l, p);
 $$
-
 -- Вызов для проверки работоспособности -- 
 call add_pass_data(1, 'ivan11', 'i1v2a3n4');
 
@@ -86,7 +84,7 @@ begin
 	where main.users.login = username);
 end;
 $$ language plpgsql;
-
+-- Вызов для проверки работоспособности --
 select * from all_user_passwords('Ivan');
 	
 -- Функция возвращающая Логин и пароль по Имени пользователя и названию ресурса -- 
@@ -111,13 +109,48 @@ select * from all_user_passwords(username);
 	where temp_table.Resource = res;
 end;
 $$ language plpgsql;
-
+-- Вызов для проверки работоспособности --
 select * from Find_pass('Ivan', 'Site_1');
 
+-- Функция, возвращающая Id пароля по имени пользователя и названию ресурса --
+create or replace function Get_PassId(username varchar(30), res varchar(50)) returns int
+as $$
+begin
+	return(
+	select pID from main.PassId
+	where main.PassId.userid  = (
+	select id from main.users 
+	where main.users.login = username
+	) and 
+	main.passid.resource = res);
+end;
+$$ language plpgsql;
 
+-- Удаление пароля из бд--
+create or replace procedure Delete_pass(username varchar(30), res varchar(50))
+language sql 
+as $$
+delete from main.passwords
+where main.passwords.pid = (select Get_PassId(username, res))
+$$
 
-
-
+-- Триггер на добавление нового пользователя --
+create or replace function New_user(cu varchar(30), ul varchar(30), up varchar(30)) returns trigger
+-- ul - user login; 
+-- up - user password; 
+-- cu - current user;
+as $tr_new_user$
+declare 
+cut varchar(30); -- current user type;
+begin 
+	cut = (select u_type from main.utypes 
+	join main.users on main.users.id  = main.utypes.id 
+	where main.users.login = cu)
+	if cut = 'super' then 
+	
+	
+end
+$tr_new_user$ language plpgsql;
 
 
 
