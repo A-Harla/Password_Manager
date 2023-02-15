@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Products</title>
+</head>
+<body>
+<table>
+    <thead><th>Login</th><th>Password</th><
+    {{range . }}
+    <tr>
+        <td>{{.login}}</td>
+        <td>{{.pass}}</td>
+    </tr>
+    {{end}}
+</table>
+</body>
+</html>
