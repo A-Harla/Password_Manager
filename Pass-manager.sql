@@ -68,6 +68,20 @@ $$
 -- Вызов для проверки работоспособности -- 
 call add_pass_data(1, 'ivan11', 'i1v2a3n4');
 
+-- Итоговая процедура добавления пароля --
+create or replace procedure add_pass(username varchar(30), res varchar(50), l varchar(30), p varchar(30)) 
+as $$
+declare 
+uid int;
+begin
+uid = (select id from main.users
+where main.users.login = username);
+call add_new_password(uid, res) ;
+call add_pass_data (get_passid(username, res), l, p);
+end;
+$$ language plpgsql
+
+
 -- Функция возвращающая все пароли пользователя --
 create or replace function All_user_passwords(username varchar(30)) -- получает имя пользователя --
 returns table  (Resource varchar(50), Login varchar(30), Pass varchar(30))
@@ -88,7 +102,7 @@ $$ language plpgsql;
 select * from all_user_passwords('Ivan');
 	
 -- Функция возвращающая Логин и пароль по Имени пользователя и названию ресурса -- 
-create or replace function Find_pass(username varchar(30), res varchar(50))
+create or replace function main.Find_pass(username varchar(30), res varchar(50))
 returns table ("Login" varchar(30), "Password" varchar(30))
 as $$
 begin
@@ -152,11 +166,12 @@ begin
 end
 $tr_new_user$ language plpgsql;
 
-
-
-
-
-
+-- Добавление данных для тестового запуска --
+call add_new_user('petr', 'p1e2t3r4');
+call add_pass('Ivan', 'Rustore', 'ivan1980', 'pass1234');
+call add_pass('petr', 'habr', 'petya_go', '0089ppp');
+call add_pass('petr', 'skisport', 'user_petya', '0089ski');
+call add_pass('Ivan', 'github', 'python_progger', 'pyt101010');
 
 
 
